@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:15
+    container_name: paytrack-user-db
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: paytrack
+      POSTGRES_PASSWORD: paytrack
+      POSTGRES_DB: paytrack_users
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:
