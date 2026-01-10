@@ -159,10 +159,10 @@ EOF
 # ----------------------
 # src structure
 # ----------------------
-mkdir -p src/models src/routes
+mkdir -p src/models src/routes src/dto
 
 # ----------------------
-# User model
+# User model (fixed typing)
 # ----------------------
 cat <<'EOF' > src/models/User.ts
 import {
@@ -175,11 +175,28 @@ import {
 } from 'sequelize-typescript';
 import { v4 as uuidv4 } from 'uuid';
 
+/**
+ * DB attributes
+ */
+export interface UserAttributes {
+  id: string;
+  name: string;
+  email: string;
+}
+
+/**
+ * Attributes required on creation
+ */
+export interface UserCreationAttributes {
+  name: string;
+  email: string;
+}
+
 @Table({
   tableName: 'users',
   timestamps: true
 })
-export class User extends Model {
+export class User extends Model<UserAttributes, UserCreationAttributes> {
   @PrimaryKey
   @Default(uuidv4)
   @Column(DataType.UUID)
@@ -190,6 +207,31 @@ export class User extends Model {
 
   @Column(DataType.STRING)
   email!: string;
+}
+EOF
+
+# ----------------------
+# DTO + validation
+# ----------------------
+cat <<'EOF' > src/dto/CreateUserDto.ts
+export interface CreateUserDto {
+  name: string;
+  email: string;
+}
+
+export function validateCreateUserDto(body: any): CreateUserDto {
+  if (!body?.name || typeof body.name !== 'string') {
+    throw new Error('Invalid name');
+  }
+
+  if (!body?.email || typeof body.email !== 'string') {
+    throw new Error('Invalid email');
+  }
+
+  return {
+    name: body.name.trim(),
+    email: body.email.trim().toLowerCase()
+  };
 }
 EOF
 
@@ -209,6 +251,37 @@ export default router;
 EOF
 
 # ----------------------
+# user routes
+# ----------------------
+cat <<'EOF' > src/routes/users.ts
+import { Router } from 'express';
+import { User } from '../models/User';
+import { validateCreateUserDto } from '../dto/CreateUserDto';
+
+const router = Router();
+
+router.post('/users', async (req, res) => {
+  try {
+    const dto = validateCreateUserDto(req.body);
+    const user = await User.create(dto);
+    res.status(201).json(user);
+  } catch (err: any) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+router.get('/users/:id', async (req, res) => {
+  const user = await User.findByPk(req.params.id);
+  if (!user) {
+    return res.status(404).json({ error: 'User not found' });
+  }
+  res.json(user);
+});
+
+export default router;
+EOF
+
+# ----------------------
 # index.ts (DB + HTTP bootstrap)
 # ----------------------
 cat <<'EOF' > src/index.ts
@@ -218,12 +291,14 @@ import { Sequelize } from 'sequelize-typescript';
 import dotenv from 'dotenv';
 import { User } from './models/User';
 import healthRouter from './routes/health';
+import usersRouter from './routes/users';
 
 dotenv.config();
 
 const app = express();
 app.use(express.json());
 app.use(healthRouter);
+app.use(usersRouter);
 
 const sequelize = new Sequelize({
   dialect: 'postgres',
@@ -254,4 +329,4 @@ const PORT = Number(process.env.PORT) || 3000;
 })();
 EOF
 
-echo "✅ user-service regenerated with migrations support"
+echo "✅ user-service regenerated with User CRUD + fixed TS typing"

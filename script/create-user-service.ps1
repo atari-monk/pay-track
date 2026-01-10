@@ -29,6 +29,7 @@ Za każdym razem będę wykonywać, budować, testować i przekazywać informacj
 1. początkowy bootstrap z dokeryzowanym Postgresem i sequelize
 2. Express + /health
 3. Migracje Sequelize (users table)
+4. POST /users + GET /users/:id, DTO + walidacja, zapis do bazy
 """
 snippet -c $prompt -t prompt
 

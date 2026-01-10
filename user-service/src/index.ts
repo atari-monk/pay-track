@@ -4,12 +4,14 @@ import { Sequelize } from 'sequelize-typescript';
 import dotenv from 'dotenv';
 import { User } from './models/User';
 import healthRouter from './routes/health';
+import usersRouter from './routes/users';
 
 dotenv.config();
 
 const app = express();
 app.use(express.json());
 app.use(healthRouter);
+app.use(usersRouter);
 
 const sequelize = new Sequelize({
   dialect: 'postgres',
