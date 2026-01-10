@@ -32,7 +32,7 @@ EOF
 # install deps
 # ----------------------
 pnpm add express sequelize sequelize-typescript pg pg-hstore reflect-metadata dotenv uuid
-pnpm add -D typescript ts-node @types/node
+pnpm add -D typescript ts-node @types/node @types/express
 
 # ----------------------
 # tsconfig.json
@@ -70,6 +70,7 @@ DB_PORT=5432
 DB_USER=paytrack
 DB_PASSWORD=paytrack
 DB_NAME=paytrack_users
+PORT=3000
 EOF
 
 # ----------------------
@@ -96,7 +97,7 @@ EOF
 # ----------------------
 # src structure
 # ----------------------
-mkdir -p src/models
+mkdir -p src/models src/routes
 
 # ----------------------
 # User model
@@ -131,15 +132,36 @@ export class User extends Model {
 EOF
 
 # ----------------------
-# index.ts (DB bootstrap only)
+# health route
+# ----------------------
+cat <<'EOF' > src/routes/health.ts
+import { Router } from 'express';
+
+const router = Router();
+
+router.get('/health', (_req, res) => {
+  res.status(200).json({ status: 'ok' });
+});
+
+export default router;
+EOF
+
+# ----------------------
+# index.ts (DB + HTTP bootstrap)
 # ----------------------
 cat <<'EOF' > src/index.ts
 import 'reflect-metadata';
+import express from 'express';
 import { Sequelize } from 'sequelize-typescript';
 import dotenv from 'dotenv';
 import { User } from './models/User';
+import healthRouter from './routes/health';
 
 dotenv.config();
+
+const app = express();
+app.use(express.json());
+app.use(healthRouter);
 
 const sequelize = new Sequelize({
   dialect: 'postgres',
@@ -152,16 +174,22 @@ const sequelize = new Sequelize({
   logging: false
 });
 
+const PORT = Number(process.env.PORT) || 3000;
+
 (async () => {
   try {
     await sequelize.authenticate();
     console.log('✅ Database connected');
+
+    app.listen(PORT, () => {
+      console.log(`🚀 User service listening on port ${PORT}`);
+    });
   } catch (error) {
-    console.error('❌ Database connection failed');
+    console.error('❌ Startup failed');
     console.error(error);
     process.exit(1);
   }
 })();
 EOF
 
-echo "✅ user-service regenerated"
+echo "✅ user-service regenerated with Express + /health"

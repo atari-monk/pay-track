@@ -27,6 +27,7 @@ Aktualizuj plik create-user-service.sh, który wygeneruje całą usługę.
 Dostosuj się do jego istniejących założeń.
 Za każdym razem będę wykonywać, budować, testować i przekazywać informacje zwrotne.
 1. początkowy bootstrap z dokeryzowanym Postgresem i sequelize
+2. Express + /health
 """
 snippet -c $prompt -t prompt
 

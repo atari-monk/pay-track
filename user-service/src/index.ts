@@ -1,9 +1,15 @@
 import 'reflect-metadata';
+import express from 'express';
 import { Sequelize } from 'sequelize-typescript';
 import dotenv from 'dotenv';
 import { User } from './models/User';
+import healthRouter from './routes/health';
 
 dotenv.config();
+
+const app = express();
+app.use(express.json());
+app.use(healthRouter);
 
 const sequelize = new Sequelize({
   dialect: 'postgres',
@@ -16,12 +22,18 @@ const sequelize = new Sequelize({
   logging: false
 });
 
+const PORT = Number(process.env.PORT) || 3000;
+
 (async () => {
   try {
     await sequelize.authenticate();
     console.log('✅ Database connected');
+
+    app.listen(PORT, () => {
+      console.log(`🚀 User service listening on port ${PORT}`);
+    });
   } catch (error) {
-    console.error('❌ Database connection failed');
+    console.error('❌ Startup failed');
     console.error(error);
     process.exit(1);
   }
