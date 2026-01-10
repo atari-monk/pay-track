@@ -23,7 +23,8 @@ cat <<'EOF' > package.json
   "private": true,
   "scripts": {
     "build": "tsc",
-    "start": "ts-node src/index.ts"
+    "start": "ts-node src/index.ts",
+    "migrate": "sequelize-cli db:migrate"
   }
 }
 EOF
@@ -32,7 +33,7 @@ EOF
 # install deps
 # ----------------------
 pnpm add express sequelize sequelize-typescript pg pg-hstore reflect-metadata dotenv uuid
-pnpm add -D typescript ts-node @types/node @types/express
+pnpm add -D typescript ts-node @types/node @types/express sequelize-cli
 
 # ----------------------
 # tsconfig.json
@@ -48,7 +49,7 @@ cat <<'EOF' > tsconfig.json
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*", "migrations/**/*"]
 }
 EOF
 
@@ -92,6 +93,67 @@ services:
 
 volumes:
   pgdata:
+EOF
+
+# ----------------------
+# sequelize config
+# ----------------------
+mkdir -p config
+cat <<'EOF' > config/config.js
+require('dotenv').config();
+
+module.exports = {
+  development: {
+    username: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
+    host: process.env.DB_HOST,
+    port: process.env.DB_PORT,
+    dialect: 'postgres'
+  }
+};
+EOF
+
+# ----------------------
+# migrations
+# ----------------------
+mkdir -p migrations
+
+cat <<'EOF' > migrations/001-create-users.js
+'use strict';
+
+module.exports = {
+  async up(queryInterface, Sequelize) {
+    await queryInterface.createTable('users', {
+      id: {
+        type: Sequelize.UUID,
+        primaryKey: true,
+        allowNull: false
+      },
+      name: {
+        type: Sequelize.STRING,
+        allowNull: false
+      },
+      email: {
+        type: Sequelize.STRING,
+        allowNull: false,
+        unique: true
+      },
+      createdAt: {
+        type: Sequelize.DATE,
+        allowNull: false
+      },
+      updatedAt: {
+        type: Sequelize.DATE,
+        allowNull: false
+      }
+    });
+  },
+
+  async down(queryInterface) {
+    await queryInterface.dropTable('users');
+  }
+};
 EOF
 
 # ----------------------
@@ -192,4 +254,4 @@ const PORT = Number(process.env.PORT) || 3000;
 })();
 EOF
 
-echo "✅ user-service regenerated with Express + /health"
+echo "✅ user-service regenerated with migrations support"

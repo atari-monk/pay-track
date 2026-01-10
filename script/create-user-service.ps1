@@ -28,6 +28,7 @@ Dostosuj się do jego istniejących założeń.
 Za każdym razem będę wykonywać, budować, testować i przekazywać informacje zwrotne.
 1. początkowy bootstrap z dokeryzowanym Postgresem i sequelize
 2. Express + /health
+3. Migracje Sequelize (users table)
 """
 snippet -c $prompt -t prompt
 

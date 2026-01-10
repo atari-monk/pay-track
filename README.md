@@ -16,5 +16,6 @@ cd user-service
 cp .env.example .env
 docker compose up -d
 pnpm build
+pnpm migrate
 pnpm start
 ```

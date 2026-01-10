@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "build": "tsc",
-    "start": "ts-node src/index.ts"
+    "start": "ts-node src/index.ts",
+    "migrate": "sequelize-cli db:migrate"
   },
   "dependencies": {
     "dotenv": "^17.2.3",
@@ -19,6 +20,7 @@
   "devDependencies": {
     "@types/express": "^5.0.6",
     "@types/node": "^25.0.5",
+    "sequelize-cli": "^6.6.5",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
   }
